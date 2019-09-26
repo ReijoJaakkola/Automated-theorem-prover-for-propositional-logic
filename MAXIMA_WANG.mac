@@ -5,6 +5,9 @@
 /* We use the following symbols for logical constants  */
 /* OR = |, AND = &, NOT = !, IMPLIES = -->, IFF = <--> , FORALL = A, EXISTS = E*/
 
+/* Path where the output for Prove_using_Wang will be written. */
+PATH_NAME = "C:/Users/reijo/maxima/Test.txt"
+
 /*Function which finds the innermost connective of an formula*/
 Bracket(C) := block([],
 	D: makelist(0,0),
@@ -212,7 +215,7 @@ Random_Formula(m,n):=block([Alphabet, Connectives, dice, coin],
 	
 /*Here we loop x times trying to prove something*/
 Prove_using_Wang(x,m,n):=block([A,B,True],
-	writefile("C:/Users/reijo/maxima/Test.txt"),
+	writefile(PATH_NAME),
 	for i:1 thru x do(
 		A:Random_Formula(m,n),
 		B:Random_Formula(m,n),
