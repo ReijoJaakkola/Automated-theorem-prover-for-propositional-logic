@@ -1,5 +1,5 @@
 /* Wang's algorithm          */
-/* Reijo Jaakkola, 30.5.2019 */
+/* Reijo Jaakkola, 26.9.2019 */
 /* reijo.jaakkola@tuni.fi    */
 
 /* We use the following symbols for logical constants  */
@@ -218,4 +218,6 @@ Prove_using_Wang(x,m,n):=block([A,B,True],
 		B:Random_Formula(m,n),
 		True: Wang_Start({A},{B}),
 		if(True = true) then
-		(print(sconcat(A,"=>",B)))), closefile());
+		(print("We found a tautology!"), print(sconcat(A,"=>",B)), print(""))
+		else (print("Not a tautology!"),print(""))),
+	closefile());
