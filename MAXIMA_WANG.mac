@@ -1,0 +1,221 @@
+/* Wang's algorithm          */
+/* Reijo Jaakkola, 30.5.2019 */
+/* reijo.jaakkola@tuni.fi    */
+
+/* We use the following symbols for logical constants  */
+/* OR = |, AND = &, NOT = !, IMPLIES = -->, IFF = <--> , FORALL = A, EXISTS = E*/
+
+/*Function which finds the innermost connective of an formula*/
+Bracket(C) := block([],
+	D: makelist(0,0),
+	c: 0,
+	/*We push "d" into D, if the innermost connective is here.*/
+	for i:1 thru slength(C) do (
+		if(charat(C,i)="(") then (  
+			c: c + 1,
+			push(c,D)
+		)
+		else if(charat(C,i)=")") then (
+			c: c - 1,
+			push(c,D)
+		)
+		else if((charat(C,i)="|" or charat(C,i)="&" or charat(C,i)="<" or charat(C,i)="-") and (c=1 or c=0)) then (
+			push("d",D)
+		)
+		else (
+			push(0,D)
+		)
+   ),
+   /*Elements are saved in reverse order, so we have to reverse the list here*/
+   D: reverse(D),
+   return(D));
+
+/*Function which returns the index for the innermost connective in the formula*/   
+Bracket_V2(C) := block([i,D],
+	i: 1,
+	D: Bracket(C),
+	/*The innermost connective is where D[i] = d*/
+	while(not(D[i]="d") and i<length(D)) do
+	(i:i+1),
+	if(i=length(D)) then
+	(return(-1))
+	else(return(i)));
+
+/* A function that maps recursively every every formula         */
+/* into an equivalent one which only contains OR, AND, and NOT. */
+Convert_Formula_To_Normal_Form(A):=block([D],
+	if(slength(A) < 1) then
+	(return(-1))
+	else if(slength(A)=1) then
+	(return(A))
+	else if(charat(A,1)="!") then(
+	A: sremovefirst("!",A),
+	return(sconcat("!",Convert_Formula_To_Normal_Form(A))))
+	else(
+		D: Bracket_V2(A),
+		if(charat(A,D) = "|" or charat(A,D) = "&") then
+		(return(sconcat("(",Convert_Formula_To_Normal_Form(substring(A,2,D)),charat(A,D),Convert_Formula_To_Normal_Form(substring(A,D+1,slength(A))),")")))
+		else if(charat(A,D) = "-") then
+		(return(sconcat("(!",Convert_Formula_To_Normal_Form(substring(A,2,D)),"|",Convert_Formula_To_Normal_Form(substring(A,D+3,slength(A))),")")))
+		else if(charat(A,D) = "<") then
+		(return(sconcat("((!",Convert_Formula_To_Normal_Form(substring(A,2,D)),"|",Convert_Formula_To_Normal_Form(substring(A,D+4,slength(A))),")&(!",Convert_Formula_To_Normal_Form(substring(A,D+4,slength(A))),"|",Convert_Formula_To_Normal_Form(substring(A,2,D)),"))")))));
+
+/* A function which removes spacings */
+Remove_Spacing(A):=block([], return(sremove(" ",A)));
+
+/*Function which checks whether A or B contain a same formula*/
+Same_Formula(A,B):=block([A_set,B_set],
+	A_set: setify(A),
+	B_set: setify(B),
+	if(cardinality(intersection(A_set,B_set)) > 0) then
+	(return(true))
+	else
+	(return(false)));
+
+/*Function which checks wheter A contains any formulas which are primitive i.e. do not contain connectives*/
+No_Connectives(A):=block([True, A_sizes],
+	True: true,
+	A_sizes: map(slength,A),
+	for i:1 thru length(A_sizes) do(
+		if(A_sizes[i]>1) then
+		(True: false)),
+	return(True));
+
+/* The input to Wang's algorithm will be of the form (A,B),   */
+/* where A and B are sets of formulas of propositional logic. */
+/* We want to check whether or not A => B.                    */
+
+/* Here we start recursively calling Wang's algorithm */
+Wang_Start(A,B):=block([],
+	print(sconcat("Thesis:"),A,"=>",B),
+	/*First we remove any possible spacings*/
+	/*and convert formulas into normal form.*/
+	/*To do this, it's easier to first convert A,B*/
+	/*to lists.*/
+	A: listify(A),
+	B: listify(B),
+	A: map(Remove_Spacing, A),
+	B: map(Remove_Spacing, B),
+	A: map(Convert_Formula_To_Normal_Form,A),
+	B: map(Convert_Formula_To_Normal_Form,B),
+	print("Convert to normal form:"),
+	return(Wang(A,B,0)));
+
+/* Wang's algorithm */		
+Wang(A,B,n):=block([True, Space, m, Flag, index, was_in_A, D, F, G, True1, True2],
+	True: true,
+	Flag: true,
+	/*Next we will start a while-loop to modify the assumptions and conclusions*/
+	while(Flag) do(
+		Space: "",
+		for i:1 thru n do(
+			Space: sconcat(Space," "),
+			Space: sconcat(Space," "),
+			Space: sconcat(Space," "),
+			Space: sconcat(Space," "),
+			Space: sconcat(Space," ")
+		),
+		/*We first print what is the current case we are dealing with*/
+		print(sconcat(Space,A,"=>",B)),
+		/*We then check both of the conditions*/
+		if(Same_Formula(A,B)) then
+		(Flag: false)
+		else if(No_Connectives(A) and No_Connectives(B)) then
+		(True: false, Flag: false),
+		if(Flag) then(
+			/*Here we will store the first instance of formula which contains connectives*/
+			index: 0,
+			was_in_A: false,
+			for i:1 thru length(A) do(
+				if(slength(A[i])>1) then(
+					index: i,
+					was_in_A: true,
+					i:length(A))
+			),
+			/*If there was no such a formula in A, we then proceed to check B*/
+			if(not(was_in_A)) then(
+				for i:1 thru length(B) do(
+					if(slength(B[i])>1) then(
+						index: i,
+						i:length(B))
+				)),
+			if(was_in_A) then(
+				if(charat(A[index],1)="!") then(
+					print(sconcat(Space,"Apply negation rule:")),
+					B:append(B,[sremovefirst("!",A[index])]),
+					A:delete(A[index],A))
+				else(
+					D: Bracket_V2(A[index]),
+					if(charat(A[index],D)="&") then(
+						print(sconcat(Space,"Apply conjunction rule:")),
+						A:append(A,[substring(A[index],2,D),substring(A[index],D+1,slength(A[index]))]),
+						A:delete(A[index],A))
+					else(
+						Space: sconcat(Space," "),
+						Space: sconcat(Space," "),
+						Space: sconcat(Space," "),
+						Space: sconcat(Space," "),
+						Space: sconcat(Space," "),
+						F: substring(A[index],2,D),
+						G: substring(A[index],D+1,slength(A[index])),
+						A:delete(A[index],A),
+						print(sconcat(Space,"First part of Disjunction:")),
+						True1: Wang(append(A,[F]),B,n+1),
+						print(sconcat(Space,"Second part of Disjunction:")),
+						True2: Wang(append(A,[G]),B,n+1),
+						if(True1 = false or True2 = false) then
+							(True: false),
+						Flag: false)))
+			else(
+				if(charat(B[index],1)="!") then(
+					print(sconcat(Space,"Apply negation rule:")),
+					A:append(A,[sremovefirst("!",B[index])]),
+					B:delete(B[index],B))
+				else(
+					D: Bracket_V2(B[index]),
+					if(charat(B[index],D)="|") then(
+						print(sconcat(Space,"Apply disjunction rule:")),
+						B:append(B,[substring(B[index],2,D),substring(B[index],D+1,slength(B[index]))]),
+						B:delete(B[index],B))
+					else(
+						Space: sconcat(Space," "),
+						Space: sconcat(Space," "),
+						Space: sconcat(Space," "),
+						Space: sconcat(Space," "),
+						Space: sconcat(Space," "),
+						F: substring(B[index],2,D),
+						G: substring(B[index],D+1,slength(B[index])),
+						B: delete(B[index],B),
+						print(sconcat(Space,"First part of Conjunction:")),
+						True1: Wang(A,append(B,[F]),n+1),
+						print(sconcat(Space,"Second part of Conjunction:")),
+						True2: Wang(A,append(B,[G]),n+1),
+						if(True1 = false or True2 = false) then
+							(True: false),
+						Flag: false))))
+	), return(True));
+	
+/*To test our Wang's algorithm we generate random formulas.*/
+/*Below m is the number of connectives and n is the number */
+/*of negations.*/
+Random_Formula(m,n):=block([Alphabet, Connectives, dice, coin],
+	if(m = 0) then
+	(Alphabet: random_permutation(["A","B","C"]), return(Alphabet[1]))
+	else(
+		coin: random(2),
+		if(coin = 1 and n>0) then(
+			return(sconcat("!",Random_Formula(m,n-1))))
+		else(
+			dice: random(m),
+			Connectives: random_permutation(["|","&","-->"]),
+			return(sconcat("(",Random_Formula(m-dice-1,n),Connectives[1],Random_Formula(dice,n),")")))));
+	
+/*Here we loop x times trying to prove something*/
+Prove_using_Wang(x,m,n):=block([A,B,True],
+	writefile("C:/Users/reijo/maxima/Test.txt"),
+	for i:1 thru x do(
+		A:Random_Formula(m,n),
+		B:Random_Formula(m,n),
+		True: Wang_Start({A},{B}),
+		if(True = true) then
+		(print(sconcat(A,"=>",B)))), closefile());
