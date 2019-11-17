@@ -6,7 +6,7 @@
 /* OR = |, AND = &, NOT = !, IMPLIES = -->, IFF = <--> , FORALL = A, EXISTS = E*/
 
 /* Path where the output for Prove_using_Wang will be written. */
-PATH_NAME = "C:/Users/reijo/maxima/Test.txt"
+PATH_NAME = INSERT_YOUR_PATH_HERE;
 
 /*Function which finds the innermost connective of an formula*/
 Bracket(C) := block([],
