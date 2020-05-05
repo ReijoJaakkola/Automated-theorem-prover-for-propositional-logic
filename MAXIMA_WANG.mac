@@ -6,7 +6,7 @@
 /* OR = |, AND = &, NOT = !, IMPLIES = -->, IFF = <--> , FORALL = A, EXISTS = E*/
 
 /* Path where the output for Prove_using_Wang will be written. */
-PATH_NAME = INSERT_YOUR_PATH_HERE;
+PATH_NAME = INSERT_YOUR_PATH_HERE$
 
 /*Function which finds the innermost connective of an formula*/
 Bracket(C) := block([],
@@ -31,7 +31,7 @@ Bracket(C) := block([],
    ),
    /*Elements are saved in reverse order, so we have to reverse the list here*/
    D: reverse(D),
-   return(D));
+   return(D))$
 
 /*Function which returns the index for the innermost connective in the formula*/   
 Bracket_V2(C) := block([i,D],
@@ -42,7 +42,7 @@ Bracket_V2(C) := block([i,D],
 	(i:i+1),
 	if(i=length(D)) then
 	(return(-1))
-	else(return(i)));
+	else(return(i)))$
 
 /* A function that maps recursively every every formula         */
 /* into an equivalent one which only contains OR, AND, and NOT. */
@@ -61,10 +61,10 @@ Convert_Formula_To_Normal_Form(A):=block([D],
 		else if(charat(A,D) = "-") then
 		(return(sconcat("(!",Convert_Formula_To_Normal_Form(substring(A,2,D)),"|",Convert_Formula_To_Normal_Form(substring(A,D+3,slength(A))),")")))
 		else if(charat(A,D) = "<") then
-		(return(sconcat("((!",Convert_Formula_To_Normal_Form(substring(A,2,D)),"|",Convert_Formula_To_Normal_Form(substring(A,D+4,slength(A))),")&(!",Convert_Formula_To_Normal_Form(substring(A,D+4,slength(A))),"|",Convert_Formula_To_Normal_Form(substring(A,2,D)),"))")))));
+		(return(sconcat("((!",Convert_Formula_To_Normal_Form(substring(A,2,D)),"|",Convert_Formula_To_Normal_Form(substring(A,D+4,slength(A))),")&(!",Convert_Formula_To_Normal_Form(substring(A,D+4,slength(A))),"|",Convert_Formula_To_Normal_Form(substring(A,2,D)),"))")))))$
 
 /* A function which removes spacings */
-Remove_Spacing(A):=block([], return(sremove(" ",A)));
+Remove_Spacing(A):=block([], return(sremove(" ",A)))$
 
 /*Function which checks whether A or B contain a same formula*/
 Same_Formula(A,B):=block([A_set,B_set],
@@ -73,7 +73,7 @@ Same_Formula(A,B):=block([A_set,B_set],
 	if(cardinality(intersection(A_set,B_set)) > 0) then
 	(return(true))
 	else
-	(return(false)));
+	(return(false)))$
 
 /*Function which checks wheter A contains any formulas which are primitive i.e. do not contain connectives*/
 No_Connectives(A):=block([True, A_sizes],
@@ -82,7 +82,7 @@ No_Connectives(A):=block([True, A_sizes],
 	for i:1 thru length(A_sizes) do(
 		if(A_sizes[i]>1) then
 		(True: false)),
-	return(True));
+	return(True))$
 
 /* The input to Wang's algorithm will be of the form (A,B),   */
 /* where A and B are sets of formulas of propositional logic. */
@@ -102,7 +102,7 @@ Wang_Start(A,B):=block([],
 	A: map(Convert_Formula_To_Normal_Form,A),
 	B: map(Convert_Formula_To_Normal_Form,B),
 	print("Convert to normal form:"),
-	return(Wang(A,B,0)));
+	return(Wang(A,B,0)))$
 
 /* Wang's algorithm */		
 Wang(A,B,n):=block([True, Space, m, Flag, index, was_in_A, D, F, G, True1, True2],
@@ -196,14 +196,16 @@ Wang(A,B,n):=block([True, Space, m, Flag, index, was_in_A, D, F, G, True1, True2
 						if(True1 = false or True2 = false) then
 							(True: false),
 						Flag: false))))
-	), return(True));
-	
+	), return(True))$
+
+ALPHABET: ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]$
+
 /*To test our Wang's algorithm we generate random formulas.*/
 /*Below m is the number of connectives and n is the number */
 /*of negations.*/
 Random_Formula(m,n):=block([Alphabet, Connectives, dice, coin],
 	if(m = 0) then
-	(Alphabet: random_permutation(["A","B","C"]), return(Alphabet[1]))
+	(Alphabet: random_permutation(ALPHABET), return(Alphabet[1]))
 	else(
 		coin: random(2),
 		if(coin = 1 and n>0) then(
@@ -211,7 +213,7 @@ Random_Formula(m,n):=block([Alphabet, Connectives, dice, coin],
 		else(
 			dice: random(m),
 			Connectives: random_permutation(["|","&","-->"]),
-			return(sconcat("(",Random_Formula(m-dice-1,n),Connectives[1],Random_Formula(dice,n),")")))));
+			return(sconcat("(",Random_Formula(m-dice-1,n),Connectives[1],Random_Formula(dice,n),")")))))$
 	
 /*Here we loop x times trying to prove something*/
 Prove_using_Wang(x,m,n):=block([A,B,True],
@@ -223,4 +225,4 @@ Prove_using_Wang(x,m,n):=block([A,B,True],
 		if(True = true) then
 		(print("We found a tautology!"), print(sconcat(A,"=>",B)), print(""))
 		else (print("Not a tautology!"),print(""))),
-	closefile());
+	closefile())$
